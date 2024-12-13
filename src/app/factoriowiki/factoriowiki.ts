@@ -87,6 +87,7 @@ async function addCurrentDates(pages: WikiPage[]) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchCurrentDates50(pages: WikiPage[]): Promise<any> {
   console.assert(pages.length <= 50)
   const revids = pages.map((page) => page.revidCur)
@@ -114,6 +115,7 @@ async function addLatestDates(pages: WikiPage[]) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchLatestDates50(pages: WikiPage[]): Promise<any> {
   console.assert(pages.length <= 50)
   const pageidsEn = pages.map((page) => page.pageidEn)
