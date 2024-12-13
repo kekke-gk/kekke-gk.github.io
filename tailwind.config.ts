@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import colors from 'tailwindcss/colors'
 
 export default {
   content: [
@@ -9,6 +10,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        main: colors.zinc,
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
