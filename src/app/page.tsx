@@ -7,6 +7,7 @@ export default function Home() {
       <main className="container p-4">
         <ul className="list-disc list-inside space-y-2">
           <li><Link href="convtext">ConvText</Link></li>
+          <li><Link href="factoriowiki">FactorioWiki</Link></li>
         </ul>
       </main>
     </div>
