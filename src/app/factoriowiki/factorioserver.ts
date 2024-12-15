@@ -7,7 +7,7 @@ const DEFAULT_PARAMS = {
   format: 'json',
 }
 
-export async function request(parameters: object) {
+export async function request<T>(parameters: object): Promise<T> {
   const params = {
     ...parameters,
     ...DEFAULT_PARAMS,
@@ -16,5 +16,5 @@ export async function request(parameters: object) {
   const query = new URLSearchParams(params)
   const res = await fetch(API_URL + `?${query}`)
   const json = await res.json()
-  return json
+  return json as T
 }

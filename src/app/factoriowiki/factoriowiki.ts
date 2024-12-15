@@ -14,8 +14,19 @@ export class WikiPage {
   ) {}
 }
 
+interface OutdatedPages {
+  query: {
+    categorymembers: [
+      {
+        pageid: string,
+        title: string,
+      }
+    ]
+  }
+}
+
 async function fetchOutdatedPages(): Promise<WikiPage[]> {
-  const res = await request({
+  const res = await request<OutdatedPages>({
     list: 'categorymembers',
     cmtitle: 'Category:Outdated_translations/ja',
     cmlimit: '500',
@@ -29,7 +40,7 @@ async function fetchOutdatedPages(): Promise<WikiPage[]> {
 async function addRevisionIDtoEachPages(pages: WikiPage[]) {
   await addContents(pages)
   for (let i = 0; i < pages.length; i++) {
-    pages[i].revidCur = extractRevinioIDfromContent(pages[i].content)
+    pages[i].revidCur = extractRevinioIDfromContent(pages[i].content!)
   }
 }
 
@@ -63,11 +74,43 @@ async function addContents(pages: WikiPage[]) {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchContents50(pages: WikiPage[]): Promise<any> {
+interface Contents {
+  query: {
+    pages: {
+      [pageid: string]: {
+        revisions: [
+          {
+            slots: {
+              main: {
+                '*': string
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+
+interface ContentsSlim {
+  [pageid: string]: {
+    revisions: [
+      {
+        slots: {
+          main: {
+            '*': string
+          }
+        }
+      }
+    ]
+  }
+}
+
+ 
+async function fetchContents50(pages: WikiPage[]): Promise<ContentsSlim> {
   console.assert(pages.length <= 50)
   const pageids = pages.map((page) => page['pageid'])
-  const res =  await request({
+  const res =  await request<Contents>({
     prop: 'revisions',
     pageids: pageids.join('|'),
     rvprop: 'content',
@@ -82,24 +125,46 @@ async function addCurrentDates(pages: WikiPage[]) {
   const results = await Promise.all(curDatesPromises)
   const res = results.reduce((res1, res2) => ({...res1, ...res2}))
   for (let i = 0; i < pages.length; i++) {
-    pages[i].dateCur = new Date(res[pages[i].revidCur]['timestamp'])
-    pages[i].pageidEn = res[pages[i].revidCur]['pageidEn']
+    pages[i].dateCur = new Date(res[pages[i].revidCur!]['timestamp'])
+    pages[i].pageidEn = res[pages[i].revidCur!]['pageidEn']
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchCurrentDates50(pages: WikiPage[]): Promise<any> {
+interface CurDates {
+  query: {
+    pages: {
+      [pageidEn: string]: {
+        revisions: [
+          {
+            revid: string,
+            timestamp: string,
+          }
+        ]
+      }
+    }
+  }
+}
+
+interface CurDatesDict {
+  [revid: string]: {
+    pageidEn: string,
+    timestamp: Date,
+  }
+}
+
+ 
+async function fetchCurrentDates50(pages: WikiPage[]): Promise<CurDatesDict> {
   console.assert(pages.length <= 50)
   const revids = pages.map((page) => page.revidCur)
-  const res =  await request({
+  const res =  await request<CurDates>({
     prop: 'revisions',
     revids: revids.join('|'),
     rvprop: 'timestamp|ids',
   })
-  const curDates = {}
-  for (const [pageidEn, data] of Object.entries(res['query']['pages'])) {
-    const revid = data['revisions'][0]['revid'].toString()
-    const timestamp = data['revisions'][0]['timestamp']
+  const curDates: CurDatesDict = {}
+  for (const pageidEn in res['query']['pages']) {
+    const revid = res['query']['pages'][pageidEn]['revisions'][0]['revid']
+    const timestamp = new Date(res['query']['pages'][pageidEn]['revisions'][0]['timestamp'])
     curDates[revid] = {pageidEn: pageidEn, timestamp: timestamp}
   }
   return curDates
@@ -111,15 +176,39 @@ async function addLatestDates(pages: WikiPage[]) {
   const results = await Promise.all(latestDatesPromises)
   const res = results.reduce((res1, res2) => ({...res1, ...res2}))
   for (let i = 0; i < pages.length; i++) {
-    pages[i].dateLatest = new Date(res[pages[i].pageidEn]['revisions'][0]['timestamp'])
+    pages[i].dateLatest = new Date(res[pages[i].pageidEn!]['revisions'][0]['timestamp'])
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchLatestDates50(pages: WikiPage[]): Promise<any> {
+interface LatestDates {
+  query: {
+    pages: {
+      [pageidEn: string]: {
+        revisions: [
+          {
+            timestamp: string,
+          }
+        ]
+      }
+    }
+  }
+}
+
+interface LatestDatesDict {
+  [pageidEn: string]: {
+    revisions: [
+      {
+        timestamp: string,
+      }
+    ]
+  }
+}
+
+ 
+async function fetchLatestDates50(pages: WikiPage[]): Promise<LatestDatesDict> {
   console.assert(pages.length <= 50)
   const pageidsEn = pages.map((page) => page.pageidEn)
-  const res =  await request({
+  const res =  await request<LatestDates>({
     prop: 'revisions',
     pageids: pageidsEn.join('|'),
     rvprop: 'timestamp',
@@ -140,7 +229,7 @@ export async function fetchOutdatedJaPagesInOldestOrder(): Promise<WikiPage[]> {
   await addLatestDates(pages)
   addTimeDiff(pages)
 
-  pages.sort((a, b) => b.timeDiffInDay - a.timeDiffInDay)
+  pages.sort((a, b) => b.timeDiffInDay! - a.timeDiffInDay!)
 
   return pages
 }
