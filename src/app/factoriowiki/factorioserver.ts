@@ -1,5 +1,3 @@
-'use server'
-
 const API_URL = 'https://wiki.factorio.com/api.php'
 
 const DEFAULT_PARAMS = {
