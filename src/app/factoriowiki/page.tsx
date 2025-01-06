@@ -18,7 +18,13 @@ export default function Page() {
     fetchPages()
   }, [])
 
-  if (!pages) return <div>Loading...</div>
+  if (!pages.length) return (
+    <div>
+      <main className="container p-4">
+        <h1>Loading...</h1>
+      </main>
+    </div>
+  )
 
   return (
     <div>
@@ -26,7 +32,7 @@ export default function Page() {
         {WikiPagesTable(pages)}
       </main>
     </div>
-  );
+  )
 }
 
 function WikiPagesTable(pages: WikiPage[]) {

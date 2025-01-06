@@ -1,4 +1,4 @@
-const API_URL = 'https://wiki.factorio.com/api.php'
+const API_URL = 'https://kekke.me/api/factoriowiki'
 
 const DEFAULT_PARAMS = {
   action: 'query',
